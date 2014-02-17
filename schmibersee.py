@@ -77,6 +77,11 @@ except(OSError, IOError) as ex:
 # start reading values from config.txt
 # TODO: test to make sure this works with UNIX-style newlines
 for line in file:
+	# if this line starts with "#", it's a comment, skip line
+	if line[0] == "#":
+		print("Comment line, skip")
+		continue
+
 	# Split the line into segments and make sure there's no gunk at the end
 	split_values = line.partition("=")
 	command = split_values[0]
