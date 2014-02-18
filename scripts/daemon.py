@@ -2,20 +2,20 @@
     Copyright 2014, Charles 0x4f
     https://github.com/charles-0x4f
     
-    This file is part of IRC bot, Schmibersee bot.
+    This file is part of Totalibot.
 
-    IRC bot, Schmibersee bot is free software: you can redistribute it and/or
+    Totalibot is free software: you can redistribute it and/or
     modify it under the terms of the GNU General Public License as published
     by the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    IRC bot, Schmibersee bot is distributed in the hope that it will be
+    Totalibot is distributed in the hope that it will be
     useful, but WITHOUT ANY WARRANTY; without even the implied warranty
     of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with IRC bot, Schmibersee bot.
+    along with Totalibot.
 
     If not, see <http://www.gnu.org/licenses/>.
 '''
