@@ -24,24 +24,14 @@
 # Totalibot
 # Cause the original name was taken.
 
-'''
-Add our scripts directory to the Python path
-sys.path[0] is the current directory this .py is in
-//scripts should work on both Windows and *Nix style
-directories
-'''
 import sys
-sys.path.append(sys.path[0] + "//scripts")
-
+import os
 import time
+# Add our scripts directory to the Python path
+sys.path.append(sys.path[0] + os.sep + "scripts")
 
 import irc
 import util
-import user_manager
-import automated
-import pm_commands
-import war
-import daemon
 
 # pull this from a file
 server = ""
@@ -138,27 +128,41 @@ if len(sys.argv) > 1:
 # initialize IRC client
 irc = irc.IRC(server, port, use_ssl, nick, ident, realname, debug)
 
+# dynamically import and instantiate all plugins/.py files in the scripts dir:
+scripts_dir = []
+plugins = []
+
+# Get a list of all .py files in the scripts directory, minus ".py"
+for file in os.listdir(sys.path[0] + os.sep + "scripts"):
+	if file.endswith(".py"):
+		scripts_dir.append(file[:-3])
+
+# for each file we found
+for mod in scripts_dir:
+	try:
+		# try to import it
+		modules = __import__(mod, globals(), locals(), fromlist=["*"])
+
+		for obj in dir(modules):
+			try:
+				print("Loading plugin: " + repr(obj))
+				new_plugin = getattr(modules, obj)(irc)
+				plugins.append(new_plugin)
+				break
+			except:
+				print("Failed to load plugin")
+				traceback.print_exc()
+				break
+				pass
+	except:
+		print("Failed to import plugin")
+		pass
+
 # do some setup with the utility module
 irc.util.auto_join(channels)
 irc.util.set_connect_command(connect_command)
 irc.util.set_password(password)
 irc.util.set_version(version)
-
-# TODO: Make this completely dynamic
-# initialize list of handler classes/modules
-user_mngr = user_manager.UserManager(irc)
-auto = automated.Automated(irc)
-commands_pm = pm_commands.PM_Commands(irc)
-cmd_war = war.War(irc)
-cmd_daemon = daemon.Daemon(irc)
-
-# add handlers to the handlers list
-handlers = []
-handlers.append(user_mngr)
-handlers.append(auto)
-handlers.append(commands_pm)
-handlers.append(cmd_war)
-handlers.append(cmd_daemon)
 
 # connect to the IRC server
 irc.connect()
@@ -169,10 +173,19 @@ while 1:
 		message = irc.message_queue.pop(0)
 		
 		# loop through our handlers
-		for handler in handlers:
-			# if this handler handles this type of message, pass it
-			if message.type in handler.types:
-				handler.message_handler(message)
+		for handler in plugins:
+			try:
+				# if this handler handles this type of message, pass it
+				if message.type in handler.types:
+					handler.message_handler(message)
+			except:
+				print("FAILURE: Plugin damaged or not written correctly," +
+					" removing it from plugin pool")
+				plugins.remove(handler)
+
+				# when a plugin is removed, the message stops getting handled
+				# re-insert this message to the top of the queue
+				irc.message_queue = [message] + irc.message_queue
 	else:
 		time.sleep(1)
 				

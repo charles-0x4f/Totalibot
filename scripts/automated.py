@@ -29,7 +29,6 @@ class Automated:
 	def __init__(self, IRC):
 		self.irc = IRC
 		self.joined = False
-		
 		self.types = ["response", "ctcp"]
 	
 	def message_handler(self, message):
