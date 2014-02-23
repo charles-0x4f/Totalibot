@@ -32,7 +32,7 @@ class War:
 	def __init__(self, IRC):
 		self.irc = IRC
 		self.types = ["command"]
-		self.commands = ["war"]
+		self.public_commands = ["war"]
 
 		self.commander = None
 		self.kick_list = []

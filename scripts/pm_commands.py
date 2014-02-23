@@ -30,7 +30,8 @@ class PM_Commands:
 		self.irc = IRC
 		self.types = ["pm"]
 		
-		self.commands = ["login", "say", "action", "raw", "printusers", "quit"]
+		self.commands = ["login", "say", "action", "raw",
+			"printusers", "quit"]
 		self.error = "Not enough paramaters"
 		
 	def message_handler(self, message):

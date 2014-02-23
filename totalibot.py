@@ -27,6 +27,8 @@
 import sys
 import os
 import time
+import traceback
+
 # Add our scripts directory to the Python path
 sys.path.append(sys.path[0] + os.sep + "scripts")
 
@@ -43,6 +45,8 @@ if len(sys.argv) > 1:
 	if sys.argv[1].isdigit() == True:
 		debug = int(sys.argv[1])
 		print("Debug level: " + str(debug))
+else:
+	debug = 0
 
 # initialize IRC client
 irc = irc.IRC(irc_params, debug)
@@ -75,7 +79,11 @@ for mod in scripts_dir:
 				pass
 	except:
 		print("Failed to import plugin")
+		traceback.print_exc()
 		pass
+
+# Add our initiated plugin list to the IRC object's list
+irc.initiated_plugins = plugins
 
 # do some setup with the utility module
 irc.util.auto_join(irc_params.channels)
@@ -100,12 +108,13 @@ while 1:
 			except:
 				print("FAILURE: Plugin damaged or not written correctly," +
 					" removing it from plugin pool")
+				traceback.print_exc()
 				plugins.remove(handler)
 
 				# when a plugin is removed, the message stops getting handled
 				# re-insert this message to the top of the queue
 				irc.message_queue = [message] + irc.message_queue
-				
+
 				# continue or some plugins may process the same message twice
 				continue
 	else:
