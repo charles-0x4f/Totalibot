@@ -32,92 +32,11 @@ sys.path.append(sys.path[0] + os.sep + "scripts")
 
 import irc
 import util
+import structures
+import config_loader
 
-# pull this from a file
-server = ""
-port = None
-use_ssl = False
-nick = ""
-ident = ""
-realname = ""
-version = ""
-channels = []
-owner = ""
-password = ""
-connect_command = ""
-debug = 0
-
-# move file stuff to a different file?
-# try to open config.txt
-try:
-	file = open("config.txt", "r")
-except(OSError, IOError) as ex:
-	# do something with ex
-	print("No config.txt or serious error")
-
-	print("Creating empty config.txt")
-	config_string = "# comma separate channels or where there's multiples" + \
-		"\nserver=\nport=\nuse_ssl=\nnick=\nident=\n" + \
-		"realname=\nversion=\nchannels=\nowner=\npassword=\nconnect_command="
-	file = open("config.txt", "w")
-	file.write(config_string)
-	file.close()
-	exit()
-
-# start reading values from config.txt
-# TODO: test to make sure this works with UNIX-style newlines
-for line in file:
-	# if this line starts with "#", it's a comment, skip line
-	if line[0] == "#":
-		print("Comment line, skip")
-		continue
-
-	# Split the line into segments and make sure there's no gunk at the end
-	split_values = line.partition("=")
-	command = split_values[0]
-	value = split_values[2].rstrip("\n")
-
-	print("File value: #" + value + "#")
-
-	# sure wish python had switches that handled strings
-	if command == "server":
-		server = value
-	elif command == "port":
-		if value.isdigit() == True:
-			port = int(value)
-		else:
-			print("Port not recognized, gonna die nao")
-			exit()
-	elif command == "use_ssl":
-		if value == "True":
-			use_ssl = True
-
-			if port == 6667:
-				print("SSL doesn't usually run on this port")
-	elif command == "nick":
-		nick = value
-	elif command == "ident":
-		ident = value
-	elif command == "realname":
-		realname = value
-	elif command == "version":
-		version = value
-	elif command == "channels":
-		channels = value.split(",")
-	elif command == "owner":
-		owner = value
-	elif command == "password":
-		password = value
-	elif command == "connect_command":
-		connect_command = value
-	else:
-		# modify this to only require most essential needs
-		print("Something's missing, please fill out config.txt")
-		print(line)
-		exit()
-
-# close this puppy out
-file.close()
+# Load IRC parameters from a file
+irc_params = config_loader.load()
 
 # Check our command line arguments for debug level, default to 0 (don't print)
 if len(sys.argv) > 1:
@@ -126,7 +45,7 @@ if len(sys.argv) > 1:
 		print("Debug level: " + str(debug))
 
 # initialize IRC client
-irc = irc.IRC(server, port, use_ssl, nick, ident, realname, debug)
+irc = irc.IRC(irc_params, debug)
 
 # dynamically import and instantiate all plugins/.py files in the scripts dir:
 scripts_dir = []
@@ -159,10 +78,10 @@ for mod in scripts_dir:
 		pass
 
 # do some setup with the utility module
-irc.util.auto_join(channels)
-irc.util.set_connect_command(connect_command)
-irc.util.set_password(password)
-irc.util.set_version(version)
+irc.util.auto_join(irc_params.channels)
+irc.util.set_connect_command(irc_params.connect_command)
+irc.util.set_password(irc_params.password)
+irc.util.set_version(irc_params.version)
 
 # connect to the IRC server
 irc.connect()
@@ -186,6 +105,9 @@ while 1:
 				# when a plugin is removed, the message stops getting handled
 				# re-insert this message to the top of the queue
 				irc.message_queue = [message] + irc.message_queue
+				
+				# continue or some plugins may process the same message twice
+				continue
 	else:
 		time.sleep(1)
 				

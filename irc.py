@@ -31,29 +31,18 @@ import time
 from threading import Thread
 
 import util
+import structures
 import users_db
-
-# Used as a way to pass message details around the bot
-class Message:
-	types = ["response", "message", "notice", "pm", "ctcp", "command",
-		"join", "part"]
-	type = ""
-	code = ""
-	sender = ""
-	sender_full = ""
-	channel = ""
-	command = ""
-	message = []
 
 # Main IRC class, handles all the protocol details
 class IRC:
-	def __init__(self, server, port, ssl, nick, ident, realname, debug):
-		self.server = server
-		self.port = port
-		self.use_ssl = ssl
-		self.nick = nick
-		self.ident = ident
-		self.realname = realname
+	def __init__(self, parameters, debug):
+		self.server = parameters.server
+		self.port = parameters.port
+		self.use_ssl = parameters.use_ssl
+		self.nick = parameters.nick
+		self.ident = parameters.ident
+		self.realname = parameters.realname
 		self.debug_level = debug
 		
 		# reserve empty lists
@@ -201,7 +190,7 @@ class IRC:
 					self.is_ready = True
 				
 			# temporary message object to be added to message queue
-			message = Message()
+			message = structures.Message()
 			
 			# see if this is a response code message
 			if (len(line[1]) == 3) and (line[1].isdigit() == True):

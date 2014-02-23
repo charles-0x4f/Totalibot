@@ -33,6 +33,7 @@ import time
 from threading import Thread
 
 import irc
+import structures
 
 class Daemon:
     def __init__(self, IRC):
@@ -95,20 +96,20 @@ class Daemon:
                 return
 
             # get server information needed for connecting
-            server = self.IRC.server
-            port = self.IRC.port
-            use_ssl = self.IRC.use_ssl
-            nick = ""
-            ident = ""
-            realname = "Daemon"
+            irc_params = structures.IRC_Parameters()
+            irc_params.server = self.IRC.server
+            irc_params.port = self.IRC.port
+            irc_params.use_ssl = self.IRC.use_ssl
+            irc_params.nick = ""
+            irc_params.ident = ""
+            irc_params.realname = "Daemon"
 
             # many IRC bots unly use "user" name for identification
             # making these random should trick them
-            nick = "u" + str(random.randint(10000, 1000000))
-            ident = "u" + str(random.randint(10000, 1000000))
+            irc_params.nick = "u" + str(random.randint(10000, 1000000))
+            irc_params.ident = "u" + str(random.randint(10000, 1000000))
 
-            irc_obj = irc.IRC(server, port, use_ssl, nick, ident, realname,
-                self.IRC.debug_level)
+            irc_obj = irc.IRC(irc_params, 0)
             channel = [self.target_channel]
             #irc_obj.util.auto_join(channel)
 

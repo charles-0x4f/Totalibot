@@ -20,7 +20,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 '''
 
-# users.py
+# users_db.py
 
 # This all needs to be redone using some sort of relational database, methinks
 # Expanded channel information
