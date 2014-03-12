@@ -7,7 +7,7 @@ This is chat bot for the IRC chat protocol.
 
 If you want to make a plugin for the bot, just make a new file in the scripts directory and make a class:
 
-'''
+```
 class [classname]:
   def __init__(self, IRC):
     # this is how we'll access all of the IRC elements
@@ -23,4 +23,4 @@ class [classname]:
 	# Everytime a message with the type you declared in types comes
 	# into the queue, this function will be called
     pass
-'''
+```
