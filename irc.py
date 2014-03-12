@@ -32,7 +32,8 @@ from threading import Thread
 
 import util
 import structures
-import users_db
+#import users_db
+import users_sqlite
 
 # Main IRC class, handles all the protocol details
 class IRC:
@@ -46,7 +47,8 @@ class IRC:
 		self.debug_level = debug
 		
 		# reserve empty lists
-		self.channels = users_db.ChannelList()
+		#self.channels = users_db.ChannelList()
+		self.sql = users_sqlite.Database(self, self.server)
 		self.message_queue = []
 		
 		# values that the bot may need in the future
@@ -55,6 +57,7 @@ class IRC:
 		self.is_connected = False
 		self.is_ready = False
 		self.receive_thread = None
+		self.initiated_plugins = []
 		
 		# create a Util object
 		self.util = util.Util(self)
@@ -201,7 +204,7 @@ class IRC:
 				message.message = line[3:]
 			
 			# set sender_full to the sender's full nick and host
-			message.sender_full = line[0]
+			message.sender_full = line[0][1:]
 			# get sender (username!host)
 			message.sender = line[0][1:].split('!')[0]
 			
@@ -226,6 +229,7 @@ class IRC:
 						message.type = "command"
 						message.channel = line[2]
 						message.command = line[3][2:].lower()
+						message.message = line[4:]
 					# otherwise this is a normal chat
 					else:
 						message.type = "message"
@@ -238,8 +242,12 @@ class IRC:
 
 			elif line[1] == "JOIN":
 				message.type = "join"
-				# strip the leading ':'
-				message.channel = line[2][1:]
+
+				if line[2][0] == ":":
+					# strip the leading ':'
+					message.channel = line[2][1:]
+				else:
+					message.channel = line[2]
 				
 			elif line[1] == "PART" or line[1] == "QUIT":
 				message.type = "part"
@@ -255,6 +263,35 @@ class IRC:
 				else:
 					# This is a quit message
 					message.message = line[2:]
+
+			elif line[1] == "NICK":
+				message.type = "nick"
+
+				# if there's a NICK command, message.sender will be the new
+				# nick and sender_full will have the old one in it
+				message.sender = line[2]
+
+			elif line[1] == "MODE":
+				# we only care about modes that change user statuses for now
+				# (+o -v, etc.)
+				if line_length < 5:
+					return
+
+				message.type = "mode"
+				message.channel = line[2]
+				# the action (+o) will be in the code
+				message.code = line[3]
+				# the message is the user on the receiving end
+				message.message = line[4]
+
+			elif line[1] == "KICK":
+				message.type = "kick"
+				message.channel = line[2]
+				# code will be the one getting kicked
+				message.code = line[3]
+
+				if line_length >= 5:
+					message.message = line[4:]
 
 			elif len(message.type) == 0:
 				message.type = "unknown"

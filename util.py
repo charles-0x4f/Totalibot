@@ -76,3 +76,19 @@ class Util:
 		action = '\x01'
 		say = action + string + action
 		self.say(say, channel)
+
+	# Chop the full sender field into usable segments
+	# example: nick!user@hostname = tuple(nick, user, host)
+	def get_sender_fields(self, senderfull):
+		# if this isn't a correct full sender, return False
+		if '@' not in senderfull or '!' not in senderfull:
+			return False
+
+		buff = senderfull.split('@')
+		host = buff[1]
+		buff = buff[0]
+		buff = buff.split('!')
+		nick = buff[0]
+		user = buff[1]
+
+		return (nick, user, host)

@@ -27,6 +27,7 @@
 import sys
 import os
 import time
+import logging
 import traceback
 
 # Add our scripts directory to the Python path
@@ -109,6 +110,11 @@ while 1:
 				print("FAILURE: Plugin damaged or not written correctly," +
 					" removing it from plugin pool")
 				traceback.print_exc()
+
+				# print traceback to file
+				logging.basicConfig("tb.txt", logging.DEBUG)
+				logging.exception()
+
 				plugins.remove(handler)
 
 				# when a plugin is removed, the message stops getting handled

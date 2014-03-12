@@ -40,6 +40,9 @@ class War:
 	def message_handler(self, message):
 		if message.command == "war":
 			if self.irc.util.is_root(message.sender_full) == True:
+				# TODO: Check to see if we're an OP first
+				# sql.get_status
+
 				print("Going to war: " + message.channel)
 				self.commander = message.sender
 
@@ -47,19 +50,21 @@ class War:
 					"TREASON, YOU SHALL ALL HANG", message.channel)
 
 				# run through all users in this channel
-				index = self.irc.channels.get_index(message.channel)
-				for user_obj in self.irc.channels.channel_list[index].user_list:
+				index = self.irc.sql.get_channel_id(message.channel)
+				user_list = self.irc.sql.get_all_nicks_from_channel_id(index)
+
+				for user in user_list:
 					# make sure this isn't the best person ever
-					if user_obj.user == self.commander or user_obj.user == \
+					if user == self.commander or user == \
 						self.irc.nick:
 						continue
 
 					# add this nick to the kick list
-					self.kick_list.append(user_obj.user)
+					self.kick_list.append(user)
 
 					# do our banning
 					self.irc.send_raw_command("MODE " + message.channel + " +b"
-						+ " *" + user_obj.user + "*!*@*")
+						+ " *" + user + "*!*@*")
 
 				# now we need to kick these rapscallions
 				kick_string = "KICK " + message.channel + " "

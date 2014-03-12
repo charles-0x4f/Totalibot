@@ -29,7 +29,7 @@ class Automated:
 	def __init__(self, IRC):
 		self.irc = IRC
 		self.joined = False
-		self.types = ["response", "ctcp"]
+		self.types = ["response", "ctcp", "kick"]
 	
 	def message_handler(self, message):
 	
@@ -49,3 +49,10 @@ class Automated:
 			if "version" in message.message[0].lower():
 				self.irc.util.say_action("VERSION " +
 					self.irc.util.version, message.sender)
+
+		# auto re-join on kick
+		if message.type == "kick":
+			# if the one getting kicked is us
+			if message.code == self.irc.nick:
+				print("KICK: REJOINING")
+				self.irc.send_raw_command("JOIN " + message.channel)
