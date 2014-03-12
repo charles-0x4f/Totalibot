@@ -26,7 +26,7 @@
 # Used as a way to pass message details around the bot
 class Message:
     types = ["response", "message", "notice", "pm", "ctcp", "command",
-        "join", "part"]
+        "join", "part", "kick", "mode", "nick"]
     type = ""
     code = ""
     sender = ""
