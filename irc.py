@@ -32,7 +32,6 @@ from threading import Thread
 
 import util
 import structures
-#import users_db
 import users_sqlite
 
 # Main IRC class, handles all the protocol details
@@ -58,9 +57,12 @@ class IRC:
 		self.is_ready = False
 		self.receive_thread = None
 		self.initiated_plugins = []
+		self.reload_plugins = False
 		
 		# create a Util object
 		self.util = util.Util(self)
+		# load our plugins
+		self.util.load_plugins("scripts")
 		
 		self.sock = None
 		

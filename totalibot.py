@@ -52,40 +52,6 @@ else:
 # initialize IRC client
 irc = irc.IRC(irc_params, debug)
 
-# dynamically import and instantiate all plugins/.py files in the scripts dir:
-scripts_dir = []
-plugins = []
-
-# Get a list of all .py files in the scripts directory, minus ".py"
-for file in os.listdir(sys.path[0] + os.sep + "scripts"):
-	if file.endswith(".py"):
-		scripts_dir.append(file[:-3])
-
-# for each file we found
-for mod in scripts_dir:
-	try:
-		# try to import it
-		modules = __import__(mod, globals(), locals(), fromlist=["*"])
-
-		for obj in dir(modules):
-			try:
-				print("Loading plugin: " + repr(obj))
-				new_plugin = getattr(modules, obj)(irc)
-				plugins.append(new_plugin)
-				break
-			except:
-				print("Failed to load plugin")
-				traceback.print_exc()
-				break
-				pass
-	except:
-		print("Failed to import plugin")
-		traceback.print_exc()
-		pass
-
-# Add our initiated plugin list to the IRC object's list
-irc.initiated_plugins = plugins
-
 # do some setup with the utility module
 irc.util.auto_join(irc_params.channels)
 irc.util.set_connect_command(irc_params.connect_command)
@@ -99,6 +65,12 @@ while 1:
 	if irc.has_messages() == True:
 		#print("queue length: " + str(len(irc.message_queue)))
 		message = irc.message_queue.pop(0)
+
+		if irc.reload_plugins == True:
+			plugins = irc.initiated_plugins
+			irc.reload_plugins = False
+			print("DEBUG: INITIATED PLUGINS:")
+			print(plugins)
 		
 		# loop through our handlers
 		for handler in plugins:
@@ -112,8 +84,8 @@ while 1:
 				traceback.print_exc()
 
 				# print traceback to file
-				logging.basicConfig("tb.txt", logging.DEBUG)
-				logging.exception()
+				logging.basicConfig(filename="tb.txt", level=logging.DEBUG)
+				logging.exception("Plugin Error")
 
 				plugins.remove(handler)
 
