@@ -42,15 +42,18 @@ class Creep:
 		else:
 			nick = message.message[0]
 
-		string = ""
-		usr_id = self.irc.sql.get_user_id_from_nick_if_its_at_all_possible(nick)
+		if nick.isdigit() == False:
+			usr_id = self.irc.sql.get_user_id_from_nick_if_its_at_all_possible(nick)
 
-		if usr_id == -1:
-			self.irc.util.say("I don't know them.", message.channel)
-			return
+			if usr_id == -1:
+				self.irc.util.say("I don't know them.", message.channel)
+				return
+		else:
+			usr_id = int(nick)
 
 		usr = self.irc.sql.get_user_from_id(usr_id)
 
+		string = ""
 		string += "User: " + usr + " ID: " + str(usr_id) + "; Last seen: "
 
 		last = self.irc.sql.get_last_seen(usr)
