@@ -480,7 +480,13 @@ class Database:
 		print("DB: CHANGE STATUS BEFORE:")
 		print(current_status)
 
+		# I think current_status can be an empty string or Nonetype
+		# make sure it's an empty string
+		# TODO: find out exactly what it can be and fix this hack
 		if current_status == None:
+			current_status = ""
+
+		if len(current_status) == 0:
 			if operation == "+":
 				current_status = mode_special_char
 		elif operation == "+":
@@ -520,6 +526,30 @@ class Database:
 	def get_all_nicks_by_user(self, user):
 		usr_id = self.get_user_id(user)
 		self.db.execute("SELECT nicks FROM Nicks WHERE user_id = ?;", (usr_id,))
+
+	def am_i_op(self, channel):
+		chan_id = self.get_channel_id(channel)
+
+		if chan_id == -1:
+			print("DB: ERROR CHANNEL DOESN'T EXIST")
+			return False
+
+		self.db.execute("SELECT status FROM Channel_Contents WHERE"
+			+ " nick = ? AND channel_id = ?;", (self.irc.nick, chan_id))
+		raw = self.db.fetchall()
+
+		print("DB: AMIOP:")
+		print(raw)
+		modes = raw[0][0]
+		print(modes)
+
+		if modes == None:
+			return False
+
+		if '@' in modes:
+			return True
+		else:
+			return False
 
 	def print_rows(self, table):
 		# SQLite does not allow for parameterized table/column names
