@@ -27,10 +27,9 @@
 import sys
 import os
 import time
-import logging
-import traceback
 
-# Add our scripts directory to the Python path
+# Add our script directories to the Python path
+sys.path.append(sys.path[0] + os.sep + "core")
 sys.path.append(sys.path[0] + os.sep + "scripts")
 
 import irc
@@ -62,39 +61,6 @@ irc.util.set_version(irc_params.version)
 irc.connect()
 
 while 1:
-	if irc.has_messages() == True:
-		#print("queue length: " + str(len(irc.message_queue)))
-		message = irc.message_queue.pop(0)
-
-		if irc.reload_plugins == True:
-			plugins = irc.initiated_plugins
-			irc.reload_plugins = False
-			print("DEBUG: INITIATED PLUGINS:")
-			print(plugins)
-		
-		# loop through our handlers
-		for handler in plugins:
-			try:
-				# if this handler handles this type of message, pass it
-				if message.type in handler.types:
-					handler.message_handler(message)
-			except:
-				print("FAILURE: Plugin damaged or not written correctly," +
-					" removing it from plugin pool")
-				traceback.print_exc()
-
-				# print traceback to file
-				logging.basicConfig(filename="tb.txt", level=logging.DEBUG)
-				logging.exception("Plugin Error")
-
-				plugins.remove(handler)
-
-				# when a plugin is removed, the message stops getting handled
-				# re-insert this message to the top of the queue
-				irc.message_queue = [message] + irc.message_queue
-
-				# continue or some plugins may process the same message twice
-				continue
-	else:
-		time.sleep(1)
+	irc.dispatch_message()
+	time.sleep(1)
 				

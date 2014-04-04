@@ -52,6 +52,8 @@ class Quote:
 
 	def message_handler(self, message):
 		self.fields = self.irc.util.get_sender_fields(message.sender_full)
+		print("DEBUG: QUOTE: FIELDS:")
+		print(repr(self.fields))
 		self.usr_id = self.irc.sql.get_user_id(self.fields[1])
 		self.length = len(message.message)
 
@@ -117,11 +119,16 @@ class Quote:
 
 	def quote(self, message):
 		if self.length == 1:
-			print(message.message[0])
 			if message.message[0].isdigit():
 				quote_id = int(message.message[0])
 			else:
 				self.irc.util.say("Unknown quote format, use: >quote id",
+					message.channel)
+				return
+
+			# Make sure the ID isn't ridiculously large, causes traceback
+			if len(str(message.message[0])) > 15:
+				self.irc.util.say("That's a preposterous number, bro",
 					message.channel)
 				return
 		else:

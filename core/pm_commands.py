@@ -91,7 +91,12 @@ class PM_Commands:
 
 			# reload all plugins
 			if command == "reload":
-				self.irc.util.load_plugins("scripts")
+				# reset core and normal plugins
+				self.irc.initiated_core_plugins = \
+					self.irc.util.load_plugins("core")
+				self.irc.initiated_plugins = \
+					self.irc.util.load_plugins("scripts")
+
 				self.irc.util.say("Reloaded!", message.sender)
 				return
 

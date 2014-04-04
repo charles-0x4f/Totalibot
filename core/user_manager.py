@@ -25,7 +25,6 @@
 
 import irc
 import util
-#import users_db
 
 class UserManager:
 	def __init__(self, IRC):
@@ -74,11 +73,6 @@ class UserManager:
 
 			# 366 is the /end of names for said channel response
 			elif message.code == "366":
-				# can probably remove this at this point
-				#userlist = ""
-			
-				#for user_obj in self.irc.channels.channel_list[self.index].user_list:
-					#userlist += user_obj.status + user_obj.user + ","
 				pass
 
 		elif message.type == "join":

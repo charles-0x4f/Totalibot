@@ -105,9 +105,6 @@ class Util:
 		scripts_dir = []
 		plugins = []
 
-		# reset IRC object's list of plugins
-		self.irc.initiated_plugins = []
-
 		# Get a list of all .py files in the directory, minus ".py"
 		for file in os.listdir(sys.path[0] + os.sep + directory):
 			if file.endswith(".py"):
@@ -124,7 +121,7 @@ class Util:
 					# previous instance was probably from the old module,
 					# it was also destroyed.
 					plug = getattr(sys.modules[mod], obj)(self.irc)
-					self.irc.initiated_plugins.append(plug)
+					plugins.append(plug)
 					continue
 				else:
 					# try to import it
@@ -134,7 +131,7 @@ class Util:
 					try:
 						print("Loading plugin: " + repr(obj))
 						new_plugin = getattr(modules, obj)(self.irc)
-						self.irc.initiated_plugins.append(new_plugin)
+						plugins.append(new_plugin)
 						break
 					except:
 						print("Failed to load plugin")
@@ -146,4 +143,4 @@ class Util:
 				traceback.print_exc()
 				pass
 
-		self.irc.reload_plugins = True
+		return plugins

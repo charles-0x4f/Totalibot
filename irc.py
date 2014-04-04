@@ -28,6 +28,8 @@ import socket
 import ssl
 import string
 import time
+import logging
+import traceback
 from threading import Thread
 
 import util
@@ -46,7 +48,6 @@ class IRC:
 		self.debug_level = debug
 		
 		# reserve empty lists
-		#self.channels = users_db.ChannelList()
 		self.sql = users_sqlite.Database(self, self.server)
 		self.message_queue = []
 		
@@ -57,22 +58,19 @@ class IRC:
 		self.is_ready = False
 		self.receive_thread = None
 		self.initiated_plugins = []
-		self.reload_plugins = False
+		self.initiated_core_plugins = []
 		
 		# create a Util object
 		self.util = util.Util(self)
+
 		# load our plugins
-		self.util.load_plugins("scripts")
+		self.initiated_core_plugins = self.util.load_plugins("core")
+		self.initiated_plugins = self.util.load_plugins("scripts")
 		
 		self.sock = None
 		
 	def __receive(self):
 		while self.is_connected == True:
-			'''
-			this method of receiving data may cut off messages, splitting
-			them into different buffers, which causes partial messages
-			and strange behavior from the parser
-			'''
 			data = self.sock.recv(1024)
 			# convert bytes to unicode string, ignore unicode errors or it'll
 			# die on weird unicode IRC art
@@ -101,12 +99,58 @@ class IRC:
 		print("Connected to: " + self.server + ":" + str(self.port))
 		
 		# send user information
-		# wait a second
-		#time.sleep(1)
 		self.send_raw_command("PASS mypass")
 		self.send_raw_command("NICK " + self.nick)
 		self.send_raw_command("USER " + self.ident + " " + self.server +
 			" narf " + ":" + self.realname)
+
+	def dispatch_message(self):
+		# has messages?
+		if self.has_messages() == False:
+			return
+
+		message = self.message_queue.pop(0)
+
+		try:
+			# used to remove plugins from the plugin list on failure
+			current_plug = None
+
+			# send message to core plugins
+			for plug in self.initiated_core_plugins:
+				if message.type in plug.types:
+					current_plug = plug
+					plug.message_handler(message)
+
+			# send message to normal plugins
+			for plug in self.initiated_plugins:
+				if message.type in plug.types:
+					current_plug = plug
+					plug.message_handler(message)
+		except:
+			print("FAILURE: Plugin damaged or not written correctly," +
+				" removing it from plugin pool")
+			traceback.print_exc()
+
+			# print traceback to file
+			logging.basicConfig(filename="tb.txt", level=logging.DEBUG)
+			logging.exception("Plugin Error")
+
+			if current_plug in self.initiated_core_plugins:
+				print(current_plug)
+				self.initiated_core_plugins.remove(current_plug)
+			elif current_plug in self.initiated_plugins:
+				print(current_plug)
+				self.initiated_plugins.remove(current_plug)
+			else:
+				print("PLUGIN REMOVE ERROR")
+				print(current_plug)
+
+			# when a plugin is removed, the message stops getting handled
+			# re-insert this message to the top of the queue
+			self.message_queue = [message] + self.message_queue
+
+			# continue or some plugins may process the same message twice
+			#continue
 		
 	def send_raw_command(self, string):
 		# Python 3.3 string literals are stupid
